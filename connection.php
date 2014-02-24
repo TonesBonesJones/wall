@@ -37,6 +37,7 @@ function run_mysql_query($query)
 {
 	global $connection;
 	$result = mysqli_query($connection, $query);
+	return $result;
 }
 
 ?>

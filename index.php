@@ -28,7 +28,7 @@ session_start();
    		<?php 
   	}
   	?>
-    <h1> Welcome to the CodingDojo Wall! Please Register or Log In Below</h1>
+    <h1> Welcome to FakeBook! Please Register or Log In Below</h1>
     <h3> New Members </h3>
   	<form action="process.php" method="post" enctype="multipart/form-data">
   		<input type="hidden" name="action" value="register">
@@ -49,5 +49,6 @@ session_start();
 </body>
 </html>
 <?php
-$_SESSION = array();
+  session_unset('error');
+  session_unset('success_message');
 ?>

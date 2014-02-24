@@ -71,16 +71,64 @@ function register($connection, $post)
 
 		$query = "INSERT INTO users (first_name, last_name, email, password, created_at, updated_at)
 				  VALUES('".$post['first_name']."', '".$post['last_name']."', '".$post['email']."', '".$hash."', NOW(), NOW())";
-		mysqli_query($connection, $query);
+				  // echo $query;
+				  // die;
+		run_mysql_query($query);
+		// die;
 
 		$user_id = mysqli_insert_id($connection); //gives us the user id that was just created so we don't have to re-query
+		
 		$_SESSION['user_id'] = $user_id; //sets session equal to that user
+		
 
 		header('Location: profile.php?id='.$user_id); //GET method to grab the user id and link it to that specific user's profile page.
 		exit;
 
 	}
 }
+
+function post_message($connection, $post )
+{
+	// var_dump($post);
+	// die();
+	if(!empty($post['post']))
+	{
+		$insert_post_query = "INSERT INTO messages (user_id, message, created_at) VALUES ('". $_SESSION['user_id'] ."', '". $post['post'] ."', NOW()) ";
+		$insert_post = run_mysql_query($insert_post_query);
+		
+
+		if($insert_post == TRUE)
+			$_SESSION['notifications'][] = "New post inserted!";
+		else
+			$_SESSION['errors'][] = "Cannot post right now. Please check database connection.";
+	}
+	else
+		$_SESSION['errors'][] = "Post field must not be empty!";
+
+	header('Location: profile.php?id=' . $post['user_id'] );
+	exit;
+}
+
+function comment_post()
+{
+	if(!empty($_POST['comment']))
+	{
+		$insert_comment_query = "INSERT INTO comments (user_id, message_id, comment, created_at) VALUES('". $_SESSION['user_id'] ."', '". $_POST['message_id'] ."', '". $_POST['comment'] ."', NOW()) ";
+		$insert_comment = run_mysql_query($insert_comment_query);
+		// echo $insert_comment_query;
+		// die;
+
+		if($insert_comment == TRUE)
+			$_SESSION['notifications'][] = "New comment inserted";
+		else
+			$_SESSION['errors'][] = "Cannot comment right now. Please check database connection.";
+	}
+	else
+		$_SESSION['errors'][] = "Comment field must not be empty!";
+
+	header('Location: profile.php?id=' .$_SESSION['user_id'] );
+	exit();
+	}
 
 function login($connection, $post)
 {
@@ -93,12 +141,12 @@ function login($connection, $post)
 		$query = "SELECT id, password
 				  FROM users
 				  WHERE email = '".$post['email']."'";
-		$result = mysqli_query($connection, $query);
-		$row = mysqli_fetch_assoc($result);
+		$row = fetch_record($query);
+		
 
 		if(empty($row))
 		{
-			$_SESSION['error']['message'] = 'Could not find Email in database';
+			$_SESSION['error']['message'] = 'Could not find Email in database.. =[   Please Register';
 		}
 		else
 		{
@@ -118,18 +166,27 @@ function login($connection, $post)
 	exit;
 }
 
+if(isset($_GET['logout']))
+{
+	logout();
+}
 if(isset($_POST['action']) && $_POST['action'] == 'register')
 {
 	register($connection, $_POST);
 }
-else if(isset($_POST['action']) && $_POST['action'] == 'login')
+if(isset($_POST['action']) && $_POST['action'] == 'login')
 {
 	login($connection, $_POST);
 }
-else if(isset($_GET['logout']))
+if(isset($_POST['action']) && $_POST['action'] == 'post')
 {
-	logout();
+	post_message($connection, $_POST);
 }
+if(isset($_POST['action']) && $_POST['action'] == 'comment')
+{
+	comment_post($connection, $_POST);
+}
+
 
 header('Location: index.php');
 
